@@ -19,12 +19,13 @@ def terminal_test(state, tc):
 def utility(turn, tc, state):
     # return 1 (turn wins), -1 (turn loses), or 0 (tie)
     for li in tc:
-        if len({state[a] for a in li}) == 1:
+        if len({state[a] for a in li if state[a] != "."}) == 1:
             return 1 if state[li[0]] == turn else -1
     return 0
 
 
 def minimax(state, turn, tc):
+    turn = 'O' if turn == 'X' else 'X'
     return max_value(state, turn, tc)[1]  # returns state
 
 
@@ -34,6 +35,7 @@ def max_value(state, turn, tc):
     if terminal_test(state, tc):
         return utility(turn, tc, state)
     v = -100
+    turn = 'O' if turn == 'X' else 'X'
     for a, s in successors(state, turn):
         min = min_value(s, turn, tc)
         try:
@@ -53,6 +55,7 @@ def min_value(state, turn, tc):
     if terminal_test(state, tc):
         return -utility(turn, tc, state)
     v = 100
+    turn = 'O' if turn == 'X' else 'X'
     for a, s in successors(state, turn):
         max = max_value(s, turn, tc)
         try:
@@ -69,7 +72,7 @@ def min_value(state, turn, tc):
 def get_turn(state):
     count = {'X': 0, 'O': 0, '.': 9}
     for s in state: count[s] += 1
-    return 'O' if count['O'] > count['X'] else 'X'
+    return 'O' if count['O'] < count['X'] else 'X'
 
 
 def conditions_table(n=3, n2=9):
