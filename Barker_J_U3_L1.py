@@ -1,5 +1,5 @@
-# Name:
-# Date:
+# Name: Jeb Barker
+# Date: 12/10/2020
 
 def successors(state, turn):
     sli = [i for i in range(len(state)) if state[i] == '.']
