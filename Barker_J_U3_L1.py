@@ -20,8 +20,7 @@ def utility(turn, tc, state):
     # return 1 (turn wins), -1 (turn loses), or 0 (tie)
     for li in tc:
         if len({state[a] for a in li if state[a] != "."}) == 1:
-            re = 1 if state[li[0]] == turn else -1
-            return re
+            return 1 if state[li[0]] == turn else -1
     return 0
 
 
@@ -34,7 +33,6 @@ def max_value(state, turn, tc):
     if terminal_test(state, tc):
         return utility(turn, tc, state)
     v = (-100, state)
-
     for a, s in successors(state, turn):
         min = min_value(s, 'O' if turn == 'X' else 'X', tc)
         try:
