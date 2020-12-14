@@ -31,42 +31,33 @@ def minimax(state, turn, tc):
 
 def max_value(state, turn, tc):
     # return value and state: (val, state)
-    st = state
     if terminal_test(state, tc):
         return utility(turn, tc, state)
-    v = -100
-    turn = 'O' if turn == 'X' else 'X'
+    v = (-100, state)
+
     for a, s in successors(state, turn):
-        min = min_value(s, turn, tc)
+        min = min_value(s, 'O' if turn == 'X' else 'X', tc)
         try:
             min = min[0]
         except TypeError:
             pass
-        v1 = max(v, min)
-        if v != v1:
-            st = s
-        v = v1
-    return v, st
+        v = max(v, (min, s), key=lambda item: item[0])
+    return v
 
 
 def min_value(state, turn, tc):
     # return value and state: (val, state)
-    st = state
     if terminal_test(state, tc):
         return -utility(turn, tc, state)
-    v = 100
-    turn = 'O' if turn == 'X' else 'X'
+    v = (100, state)
     for a, s in successors(state, turn):
-        max = max_value(s, turn, tc)
+        max = max_value(s, 'O' if turn == 'X' else 'X', tc)
         try:
             max = max[0]
         except TypeError:
             pass
-        v1 = min(v, max)
-        if v != v1:
-            st = s
-        v = v1
-    return v, st
+        v = min(v, (max, s), key=lambda item: item[0])
+    return v
 
 
 def get_turn(state):
