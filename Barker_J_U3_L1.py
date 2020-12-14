@@ -20,12 +20,12 @@ def utility(turn, tc, state):
     # return 1 (turn wins), -1 (turn loses), or 0 (tie)
     for li in tc:
         if len({state[a] for a in li if state[a] != "."}) == 1:
-            return 1 if state[li[0]] == turn else -1
+            re = 1 if state[li[0]] == turn else -1
+            return re
     return 0
 
 
 def minimax(state, turn, tc):
-    turn = 'O' if turn == 'X' else 'X'
     return max_value(state, turn, tc)[1]  # returns state
 
 
@@ -110,6 +110,7 @@ def main():
     state = input("input state (ENTER if it's an empty state): ")
     if len(state) == 0: state = '.........'
     turn = get_turn(state)
+    # turn = 'O' if turn == 'X' else 'X'
     tc = conditions_table(3, 9)
     print("Game start!")
     print(display(state, 3, 9))
@@ -140,3 +141,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+#O..OXX...
