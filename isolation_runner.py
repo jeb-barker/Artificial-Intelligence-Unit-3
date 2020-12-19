@@ -159,7 +159,7 @@ def next_turn(x_pos, y_pos):
     if players[turn] != "Player":
         root.update()
         '''you may change the code below'''
-        time.sleep(delay_time)
+        # time.sleep(delay_time)
         #         start = time.time()
         move, val = players[turn].best_strategy(board, turn)
         #         time_used = round(time.time()-start, 3)
@@ -206,7 +206,7 @@ def init(choice_menu, e1, e2, v1, v2):
     if players[turn] != "Player":
         root.update()
         '''you may change the code below'''
-        time.sleep(delay_time)
+        # time.sleep(delay_time)
         move, idc = players[turn].best_strategy(board, turn)
         next_turn(move[0], move[1])
     root.mainloop()
