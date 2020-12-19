@@ -1,5 +1,5 @@
-# Name:
-# Date:
+# Name: Jeb Barker
+# Date: 12/18/2020
 import copy
 import random
 
