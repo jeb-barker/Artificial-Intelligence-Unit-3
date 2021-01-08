@@ -68,7 +68,7 @@ class CustomPlayer:
 
     def best_strategy(self, board, color):
         # returns best move
-        best_move = self.minimax(board, color, 4)  # X wins: 2, 3, 7... O wins: 1, 4, 5, 6...
+        best_move = self.minimax(board, color, 8)  # X wins: 2, 3, 7, 8... O wins: 1, 4, 5, 6...
         return best_move[1], 0
 
     def minimax(self, board, color, search_depth):
