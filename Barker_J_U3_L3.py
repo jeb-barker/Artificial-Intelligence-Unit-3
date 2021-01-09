@@ -75,6 +75,13 @@ class Best_AI_bot:
 
     def best_strategy(self, board, color):
         # returns best move
+        self.x_max = len(board)
+        self.y_max = len(board[0])
+        if color == "#000000":
+            color = "@"
+        else:
+            color = "O"
+
         best_move = self.minimax(board, color, 3)
         return best_move, 0
 
@@ -90,7 +97,7 @@ class Best_AI_bot:
         v = (-10000, board)
 
         for s in poss:
-            b = self.make_move(board, color, s)
+            b = self.make_move(board, color, s, poss[s])
             min = self.min_value(b, self.white if color == self.black else self.black, search_depth - 1)
             try:
                 min = min[0]
@@ -107,7 +114,7 @@ class Best_AI_bot:
         v = (10000, board)
 
         for s in poss:
-            b = self.make_move(board, color, s)
+            b = self.make_move(board, color, s, poss[s])
             max = self.max_value(b, self.white if color == self.black else self.black, search_depth - 1)
             try:
                 max = max[0]
@@ -147,8 +154,8 @@ class Best_AI_bot:
     def score(self, board, color):
         # returns the score of the board
         count = 0
-        for i in board:
-            for j in board:
+        for i in range(len(board)):
+            for j in range(len(board[0])):
                 if board[i][j] == color:
                     count+=1
         return count
@@ -182,5 +189,5 @@ class Best_AI_bot:
             for j in range(len(my_board[i])):
                 flipped_stones = self.find_flipped(my_board, i, j, my_color)
                 if len(flipped_stones) > 0:
-                    moves_found.update({(i, j): flipped_stones})
+                    moves_found.update({i*self.y_max+j: flipped_stones})
         return moves_found
