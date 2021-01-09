@@ -9,7 +9,7 @@ import time
 import tkinter as tk
 
 # Change the following line
-from Barker_J_U3_L3 import RandomBot, Best_AI_bot
+from Barker_J_U3_L3 import RandomBot, Best_AI_bot, Alpha_beta_AI_bot, Minimax_AI_bot
 
 # constants
 delay_time = 0
