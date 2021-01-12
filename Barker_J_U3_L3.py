@@ -72,6 +72,7 @@ class Best_AI_bot:
         self.opposite_color = {self.black: self.white, self.white: self.black}
         self.x_max = None
         self.y_max = None
+        self.corners = {0, 7, 56, 63}
 
     def best_strategy(self, board, color):
         # returns best move
@@ -82,14 +83,10 @@ class Best_AI_bot:
         else:
             color = "O"
 
-        best_move = self.minimax(board, color, 3)
+        best_move = self.alphabeta(board, color, 5, -10000, 10000)
         return best_move[1], 0
 
-    def minimax(self, board, color, search_depth):
-        # returns best "value"
-        return self.max_value(board, color, search_depth)
-
-    def max_value(self, board, color, search_depth):
+    def max_value(self, board, color, search_depth, alpha, beta):
         # return value and state: (val, state)
         poss = self.find_moves(board, color)
         if search_depth == 0 or len(poss) == 0:
@@ -97,16 +94,19 @@ class Best_AI_bot:
         v = (-10000, board)
 
         for s in poss:
-            b = self.make_move(board, color, (s//8, s % 8), poss[s])
-            min = self.min_value(b, self.white if color == self.black else self.black, search_depth - 1)
+            b = self.make_move(board, color, (s // 8, s % 8), poss[s])
+            min = self.min_value(b, self.white if color == self.black else self.black, search_depth - 1, alpha, beta)
             try:
                 min = min[0]
             except TypeError:
                 pass
-            v = max(v, (min, (s//8, s % 8)), key=lambda item: item[0])
+            v = max(v, (min, (s // 8, s % 8)), key=lambda item: item[0])
+            if v[0] > beta:
+                return v
+            alpha = max(v[0], alpha)
         return v
 
-    def min_value(self, board, color, search_depth):
+    def min_value(self, board, color, search_depth, alpha, beta):
         # return value and state: (val, state)
         poss = self.find_moves(board, color)
         if search_depth == 0 or len(poss) == 0:
@@ -114,22 +114,21 @@ class Best_AI_bot:
         v = (10000, board)
 
         for s in poss:
-            b = self.make_move(board, color, (s//8, s % 8), poss[s])
-            max = self.max_value(b, self.white if color == self.black else self.black, search_depth - 1)
+            b = self.make_move(board, color, (s // 8, s % 8), poss[s])
+            maxV = self.max_value(b, self.white if color == self.black else self.black, search_depth - 1, alpha, beta)
             try:
-                max = max[0]
+                maxV = maxV[0]
             except TypeError:
                 pass
-            v = min(v, (max, (s//8, s % 8)), key=lambda item: item[0])
+            v = min(v, (maxV, (s // 8, s % 8)), key=lambda item: item[0])
+            if v[0] < alpha:
+                return v
+            beta = min(beta, v[0])
         return v
-
-    def negamax(self, board, color, search_depth):
-        # returns best "value"
-        return 1
 
     def alphabeta(self, board, color, search_depth, alpha, beta):
         # returns best "value" while also pruning
-        pass
+        return self.max_value(board, color, search_depth, alpha, beta)
 
     def make_key(self, board, color):
         # hashes the board
@@ -148,8 +147,14 @@ class Best_AI_bot:
         return b
 
     def evaluate(self, board, color, possible_moves):
-        # returns the utility value
-        return self.score(board, color) - self.score(board, self.white if color == self.black else self.black)
+        coinDiff = (self.score(board, color) - 2 * self.score(board, self.white if color == self.black else self.black))
+        mobility = (len(possible_moves) - 2 * len(self.find_moves(board, self.opposite_color[color])))
+        corner = 0
+        for c in self.corners:
+            corner += 1 if c in possible_moves else 0
+            # corner -= 1 if c in self.find_moves(board, self.opposite_color[color]) else 0
+        # print("coinDiff: ", coinDiff*.5, " + mobility: ", mobility*2.5, " + corner: ", corner*30)
+        return coinDiff * .5 + mobility*2.5 + (corner * 30)
 
     def score(self, board, color):
         # returns the score of the board
@@ -157,7 +162,7 @@ class Best_AI_bot:
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if board[i][j] == color:
-                    count+=1
+                    count += 1
         return count
 
     def find_flipped(self, my_board, x, y, my_color):
@@ -189,7 +194,7 @@ class Best_AI_bot:
             for j in range(len(my_board[i])):
                 flipped_stones = self.find_flipped(my_board, i, j, my_color)
                 if len(flipped_stones) > 0:
-                    moves_found.update({i*self.y_max+j: flipped_stones})
+                    moves_found.update({i * self.y_max + j: flipped_stones})
         return moves_found
 
 
@@ -202,6 +207,7 @@ class Alpha_beta_AI_bot:
         self.opposite_color = {self.black: self.white, self.white: self.black}
         self.x_max = None
         self.y_max = None
+        self.corners = {0, 7, 56, 63}
 
     def best_strategy(self, board, color):
         # returns best move
@@ -276,11 +282,13 @@ class Alpha_beta_AI_bot:
         return b
 
     def evaluate(self, board, color, possible_moves):
-        coinDiff = 100 * (self.score(board, color) - self.score(board,
-                                                                self.white if color == self.black else self.black))  # /(self.score(board, color) + self.score(board, self.white if color == self.black else self.black))
-        mobility = 100 * (len(possible_moves) - len(self.find_moves(board, self.opposite_color[
-            color])))  # /(len(possible_moves) + len(self.find_moves(board, self.opposite_color[color])))
-        return coinDiff + mobility
+        coinDiff = (self.score(board, color) - 2*self.score(board, self.white if color == self.black else self.black))  # /(self.score(board, color) + self.score(board, self.white if color == self.black else self.black))
+        mobility = (len(possible_moves) - 2*len(self.find_moves(board, self.opposite_color[color])))  # /(len(possible_moves) + len(self.find_moves(board, self.opposite_color[color])))
+        corner = 0
+        for c in self.corners:
+            corner += 1 if c in possible_moves or board[c // 8][c % 8] == color else 0
+        # print("coinDiff: ", coinDiff, " + mobility: ", mobility)
+        return coinDiff/4 + (mobility*2) + (corner*5.5)
 
 
     def score(self, board, color):
