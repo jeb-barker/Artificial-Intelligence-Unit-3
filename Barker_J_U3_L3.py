@@ -73,6 +73,8 @@ class Best_AI_bot:
         self.x_max = None
         self.y_max = None
         self.corners = {0, 7, 56, 63}
+        self.gMoves = {2, 3, 4, 5, 16, 24, 32, 40, 58, 59, 60, 61, 23, 31, 39, 47}
+        self.bMoves = {1, 6, 8, 15, 9, 14, 48, 49, 57, 54, 55, 62}
 
     def best_strategy(self, board, color):
         # returns best move
@@ -147,14 +149,27 @@ class Best_AI_bot:
         return b
 
     def evaluate(self, board, color, possible_moves):
-        coinDiff = (self.score(board, color) - 2 * self.score(board, self.white if color == self.black else self.black))
+        ms = self.score(board, color)
+        os = self.score(board, self.white if color == self.black else self.black)
+        gM = 0
+        bM = 0
+        coinDiff = (ms - (2 * os))
         mobility = (len(possible_moves) - 2 * len(self.find_moves(board, self.opposite_color[color])))
         corner = 0
         for c in self.corners:
-            corner += 1 if c in possible_moves else 0
-            # corner -= 1 if c in self.find_moves(board, self.opposite_color[color]) else 0
+            corner += 1 if board[c // 8][c % 8] == color else 0
+            corner -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
+        for c in self.gMoves:
+            gM += 1 if board[c // 8][c % 8] == color else 0
+            gM -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
+        for c in self.bMoves:
+            bM -= 1 if board[c // 8][c % 8] == color else 0
+            bM += 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
         # print("coinDiff: ", coinDiff*.5, " + mobility: ", mobility*2.5, " + corner: ", corner*30)
-        return coinDiff * .5 + mobility*2.5 + (corner * 30)
+        if ms+os < 5:
+            return mobility
+        else:
+            return mobility + (corner * 80) + (gM*15)
 
     def score(self, board, color):
         # returns the score of the board
