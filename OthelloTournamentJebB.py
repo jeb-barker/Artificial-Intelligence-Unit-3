@@ -1,5 +1,6 @@
 import copy
 import multiprocessing
+import time
 
 
 class Strategy:
@@ -20,21 +21,34 @@ class Strategy:
         # returns best move
         self.x_max = 8
         self.y_max = 8
+        b = [[], [], [], [], [], [], [], []]
+        for i in range(len(board)):
+            if i % 8 == 0:
+                sub = board[i:i + 8]
+                lst = []
+                for j in sub:
+                    lst.append(j)
+                b[i // 8] = lst
 
-        best_movee = self.alphabeta(board, player, 5, -10000, 10000, still_running)
+        best_movee = self.alphabeta(b, player, 8, -10000, 10000, still_running)
+        print("FINAL MOVE: ", best_movee[1], "\n________________")
         best_move.value = best_movee[1]
-        # return best_movee[1]
+        #return best_movee[1]
 
     def max_value(self, board, player, search_depth, alpha, beta, still_running):
         # return value and state: (val, state)
+        # print(still_running.value)
+        if still_running.value == 0:
+            print("ran_out")
+            return 0
         poss = self.legal_moves(board, player)
         # print(poss)
-        if search_depth == 0 or len(poss) == 0 or still_running == 0:
+        if search_depth == 0 or len(poss) == 0:
             return self.evaluate(board, player, poss)
         v = (-10000, board)
 
         for s in poss:
-            b = self.make_move(board, player, s, poss[s])
+            b = self.make_move(board, player, (s // 8, s % 8), poss[s])
             min = self.min_value(b, self.white if player == self.black else self.black, search_depth - 1, alpha, beta,
                                  still_running)
             try:
@@ -49,13 +63,15 @@ class Strategy:
 
     def min_value(self, board, color, search_depth, alpha, beta, still_running):
         # return value and state: (val, state)
+        if still_running == 0:
+            return 0
         poss = self.legal_moves(board, color)
-        if search_depth == 0 or len(poss) == 0 or still_running == 0:
+        if search_depth == 0 or len(poss) == 0:
             return -self.evaluate(board, color, poss)
         v = (10000, board)
 
         for s in poss:
-            b = self.make_move(board, color, s, poss[s])
+            b = self.make_move(board, color, (s // 8, s % 8), poss[s])
             maxV = self.max_value(b, self.white if color == self.black else self.black, search_depth - 1, alpha, beta,
                                   still_running)
             try:
@@ -74,11 +90,11 @@ class Strategy:
 
     def make_move(self, board, color, move, flipped):
         # returns board that has been updated
-        b = [char for char in board]
-        b[move] = color
+        b = copy.deepcopy(board)
+        b[move[0]][move[1]] = color
         for m in flipped:
-            b[m[0]] = color
-        return "".join(b)
+            b[m[0]][m[1]] = color
+        return b
 
     def evaluate(self, board, color, possible_moves):
         ms = self.score(board, color)
@@ -89,85 +105,68 @@ class Strategy:
         mobility = (len(possible_moves) - 2 * len(self.legal_moves(board, self.opposite_color[color])))
         corner = 0
         for c in self.corners:
-            corner += 1 if board[c] == color else 0
-            corner -= 1 if board[c] == self.opposite_color[color] else 0
+            corner += 1 if board[c // 8][c % 8] == color else 0
+            corner -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
         for c in self.gMoves:
-            gM += 1 if board[c] == color else 0
-            gM -= 1 if board[c] == self.opposite_color[color] else 0
+            gM += 1 if board[c // 8][c % 8] == color else 0
+            gM -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
         for c in self.bMoves:
-            bM -= 1 if board[c] == color else 0
-            bM += 1 if board[c] == self.opposite_color[color] else 0
-        # print("coinDiff: ", coinDiff*.5, " + mobility: ", mobility*2.5, " + corner: ", corner*30)
+            bM -= 1 if board[c // 8][c % 8] == color else 0
+            bM += 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
+        # print("\nmobility: ", mobility, "\ncorner: ", corner*80, "\ngoodMoves: ", gM*15)
         if ms + os < 5:
             return mobility
         else:
-            return mobility + (corner * 80) + (gM * 15)
+            return mobility + (corner * 80) + gM * 3
 
     def score(self, board, color):
         # returns the score of the board
         count = 0
-        for i in range(self.y_max):
-            for j in range(self.y_max):
-                if board[i * self.y_max + j] == color:
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] == color:
                     count += 1
         return count
 
-    def find_flipped(self, my_board, pos, my_color):
-        # # print(x * self.y_max + y)
-        #
-        # if my_board[pos] != ".":
-        #     return []
-        # flipped_stones = []
-        # for incr in self.directions:
-        #     temp_flip = []
-        #     pos2 = pos + incr
-        #     while pos:
-        #         try:
-        #             if my_board[pos2] == ".":
-        #                 break
-        #             if my_board[pos2] == my_color:
-        #                 flipped_stones += temp_flip
-        #                 break
-        #             temp_flip.append([pos2])
-        #             pos2 += incr
-        #         except IndexError:
-        #             break
-        #
-        # return flipped_stones
-        x = pos // 8
-        y = pos % 8
-        if my_board[pos] != ".":
+    def find_flipped(self, my_board, x, y, my_color):
+        if my_board[x][y] != ".":
             return []
+        if my_color == self.black:
+            my_color = "x"
+        else:
+            my_color = "o"
         flipped_stones = []
         for incr in self.directions:
             temp_flip = []
             x_pos = x + incr[0]
             y_pos = y + incr[1]
-            pos2 = x_pos * self.y_max + y_pos
             while 0 <= x_pos < self.x_max and 0 <= y_pos < self.y_max:
-                if my_board[pos2] == ".":
+                if my_board[x_pos][y_pos] == ".":
                     break
-                if my_board[pos2] == my_color:
+                if my_board[x_pos][y_pos] == my_color:
                     flipped_stones += temp_flip
                     break
-                temp_flip.append([pos2])
+                temp_flip.append([x_pos, y_pos])
                 x_pos += incr[0]
                 y_pos += incr[1]
-                pos2 = x_pos * self.y_max + y_pos
         return flipped_stones
 
     def legal_moves(self, my_board, my_color):
         moves_found = {}
-        for i in range(0, len(my_board)):
-            flipped_stones = self.find_flipped(my_board, i, my_color)
-            if len(flipped_stones) > 0:
-                moves_found.update({i: flipped_stones})
+        for i in range(len(my_board)):
+            for j in range(len(my_board[i])):
+                flipped_stones = self.find_flipped(my_board, i, j, my_color)
+                if len(flipped_stones) > 0:
+                    moves_found.update({i * self.y_max + j: flipped_stones})
         return moves_found
 
 
-s = Strategy()
-a = multiprocessing.Value
-print(s.best_strategy("..................o.ox....oooo.o..oooxo.....xxx.................", "x", a, 1))
+# t0 = time.time()
+# s = Strategy()
+# a = multiprocessing.Value
+# print(s.best_strategy("..................o.ox....oooo.o..oooxo.....xxx.................", "x", a, 1))
+# tf = time.time()
+# print(tf - t0)
 
 # ........
 # ........
