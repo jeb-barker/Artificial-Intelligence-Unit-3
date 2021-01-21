@@ -30,20 +30,17 @@ class Strategy:
                     lst.append(j)
                 b[i // 8] = lst
 
-        best_movee = self.alphabeta(b, player, 8, -10000, 10000, still_running)
+        best_movee = self.alphabeta(b, player, 10, -10000, 10000, still_running)
         print("FINAL MOVE: ", best_movee[1], "\n________________")
         best_move.value = best_movee[1]
-        #return best_movee[1]
+        # return best_movee[1]
 
     def max_value(self, board, player, search_depth, alpha, beta, still_running):
         # return value and state: (val, state)
         # print(still_running.value)
-        if still_running.value == 0:
-            print("ran_out")
-            return 0
         poss = self.legal_moves(board, player)
         # print(poss)
-        if search_depth == 0 or len(poss) == 0:
+        if search_depth == 0 or len(poss) == 0 or still_running.value == 0:
             return self.evaluate(board, player, poss)
         v = (-10000, board)
 
@@ -63,10 +60,8 @@ class Strategy:
 
     def min_value(self, board, color, search_depth, alpha, beta, still_running):
         # return value and state: (val, state)
-        if still_running == 0:
-            return 0
         poss = self.legal_moves(board, color)
-        if search_depth == 0 or len(poss) == 0:
+        if search_depth == 0 or len(poss) == 0 or still_running.value == 0:
             return -self.evaluate(board, color, poss)
         v = (10000, board)
 
@@ -105,19 +100,16 @@ class Strategy:
         mobility = (len(possible_moves) - 2 * len(self.legal_moves(board, self.opposite_color[color])))
         corner = 0
         for c in self.corners:
-            corner += 1 if board[c // 8][c % 8] == color else 0
-            corner -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
+            corner += 20 if board[c // 8][c % 8] == color else -5
+            corner -= 20 if board[c // 8][c % 8] == self.opposite_color[color] else -5
         for c in self.gMoves:
-            gM += 1 if board[c // 8][c % 8] == color else 0
-            gM -= 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
-        for c in self.bMoves:
-            bM -= 1 if board[c // 8][c % 8] == color else 0
-            bM += 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
+            gM += 5 if board[c // 8][c % 8] == color else 0
+            gM -= 7 if board[c // 8][c % 8] == self.opposite_color[color] else -1
+        # for c in self.bMoves:
+        #     bM -= 1 if board[c // 8][c % 8] == color else 0
+        #     bM += 1 if board[c // 8][c % 8] == self.opposite_color[color] else 0
         # print("\nmobility: ", mobility, "\ncorner: ", corner*80, "\ngoodMoves: ", gM*15)
-        if ms + os < 5:
-            return mobility
-        else:
-            return mobility + (corner * 80) + gM * 3
+        return mobility + corner + gM
 
     def score(self, board, color):
         # returns the score of the board
